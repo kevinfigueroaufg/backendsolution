@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sv.unicomer.backendsolution.dto.TransaccionInDTO;
 import sv.unicomer.backendsolution.entity.Transaccion;
+import sv.unicomer.backendsolution.entity.TransaccionProcessingHistory;
 import sv.unicomer.backendsolution.service.TransaccionService;
 
 import java.util.List;
@@ -53,5 +54,27 @@ public class TransaccionController {
     @GetMapping("/transacciones")
     public ResponseEntity<List<Transaccion>> getAllTransacciones() {
         return ResponseEntity.ok(transaccionService.getAllTransacciones());
+    }
+
+    @PostMapping("/processTxn/{txnInId}")
+    public ResponseEntity<String> processTxn(@PathVariable String txnInId) {
+        Transaccion response = transaccionService.processTxn(txnInId);
+            return response != null ? ResponseEntity.ok(
+                    "Transaccion " + response.getTxnInId() +
+                            " procesada exitosamente. ") : ResponseEntity.badRequest().body("Error al procesar transaccion");
+
+    }
+    @GetMapping("/transaccionesProcesadas")
+    public ResponseEntity<List<TransaccionProcessingHistory>> getAllTransaccionesProcesadas() {
+        return ResponseEntity.ok(transaccionService.getAllTransaccionesProcesadas());
+    }
+
+    @PostMapping("/processTxnFail/{txnInId}")
+    public ResponseEntity<String> processTxnFail(@PathVariable String txnInId) {
+        Transaccion response = transaccionService.processTxnFail(txnInId);
+        return response != null ? ResponseEntity.ok(
+                "Transaccion " + response.getTxnInId() +
+                        " procesada exitosamente. ") : ResponseEntity.badRequest().body("Error al procesar transaccion");
+
     }
 }

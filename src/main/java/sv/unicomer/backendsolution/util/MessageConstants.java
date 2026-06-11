@@ -20,4 +20,11 @@ public final  class MessageConstants {
 
     //CONSULTA RESPUESTA
     public static final String LIST_OK = "Listado exitosamente";
+
+    //ESTADOS DE PROCESAMIENTO
+    public static final String PROCESS_RECEIVED = "RECEIVED";
+    public static final String PROCESS_PROCESSING = "PROCESSING";
+    public static final String PROCESS_PROCESSED = "PROCESSED";
+    public static final String PROCESS_FAILED = "FAILED";
+    public static final String PROCESS_RETRY_PENDING = "RETRY_PENDING";
 }
