@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: sv.unicomer.backendsolution.service.TransaccionServiceTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.406 s -- in sv.unicomer.backendsolution.service.TransaccionServiceTest
