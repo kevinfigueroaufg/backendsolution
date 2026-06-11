@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransaccionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">sv.unicomer.backendsolution.service</a> &gt; <span class="el_source">TransaccionService.java</span></div><h1>TransaccionService.java</h1><pre class="source lang-java linenums">package sv.unicomer.backendsolution.service;
+
+import jakarta.persistence.PersistenceException;
+import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import sv.unicomer.backendsolution.dto.TransaccionInDTO;
+import sv.unicomer.backendsolution.entity.TipoTransaccion;
+import sv.unicomer.backendsolution.entity.Transaccion;
+import sv.unicomer.backendsolution.exceptions.CustomException;
+import sv.unicomer.backendsolution.repository.TransaccionRepository;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+<span class="fc" id="L21">@Slf4j</span>
+public class TransaccionService {
+
+    private final TransaccionRepository transaccionRepository;
+    private final TipoTransaccionService tipoTransaccionService;
+
+<span class="fc" id="L27">    public TransaccionService(TransaccionRepository transaccionRepository, TipoTransaccionService tipoTransaccionService) {</span>
+<span class="fc" id="L28">        this.transaccionRepository = transaccionRepository;</span>
+<span class="fc" id="L29">        this.tipoTransaccionService = tipoTransaccionService;</span>
+<span class="fc" id="L30">    }</span>
+
+    @Transactional
+    public Transaccion saveTxn(TransaccionInDTO transaccionDTO) {
+        try {
+<span class="fc" id="L35">            Optional&lt;TipoTransaccion&gt; tipo =</span>
+<span class="fc" id="L36">                    tipoTransaccionService.getTipoTransaccionByNombre(transaccionDTO.getTxnTipo());</span>
+<span class="fc" id="L37">            Optional&lt;Transaccion&gt; txnInId =</span>
+<span class="fc" id="L38">                    getTransaccionByTxnInId(transaccionDTO.getTxnInId());</span>
+<span class="pc bpc" id="L39" title="1 of 2 branches missed.">            if (txnInId.isEmpty()) {</span>
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">                if (tipo.isPresent()) {</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">                    if (transaccionDTO.getTxnDetalle() != null) {</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">                        if (!transaccionDTO.getTxnDetalle().equals(&quot;&quot;)) {</span>
+<span class="fc" id="L43">                            Transaccion txn = new Transaccion();</span>
+<span class="fc" id="L44">                            txn.setTxnInId(transaccionDTO.getTxnInId());</span>
+<span class="fc" id="L45">                            txn.setTxnTipo(transaccionDTO.getTxnTipo());</span>
+<span class="fc" id="L46">                            txn.setTxnEstado(&quot;RECEIVED&quot;);</span>
+<span class="fc" id="L47">                            txn.setTxnSistema(transaccionDTO.getTxnSistema());</span>
+<span class="fc" id="L48">                            txn.setTxnDetalle(transaccionDTO.getTxnDetalle());</span>
+<span class="fc" id="L49">                            txn.setTxnDate(new Date());</span>
+<span class="fc" id="L50">                            txn.setTxnTotal(transaccionDTO.getTxnTotal());</span>
+<span class="fc" id="L51">                            log.info(&quot;Objeto guardado, procesando guardado txn&quot;);</span>
+<span class="fc" id="L52">                            return transaccionRepository.save(txn);</span>
+                        }else {
+<span class="nc" id="L54">                            log.error(&quot;Descripcion de transaccion no puede ser vacia&quot;);</span>
+<span class="nc" id="L55">                            throw new ResponseStatusException(</span>
+                                    HttpStatus.BAD_REQUEST,&quot;Descripcion de transaccion no puede ser vacia&quot;);
+                        }
+                    }else {
+<span class="nc" id="L59">                        log.error(&quot;Descripcion de transaccion no puede ser vacia&quot;);</span>
+<span class="nc" id="L60">                        throw new ResponseStatusException(</span>
+                                HttpStatus.BAD_REQUEST,&quot;Descripcion de transaccion no puede ser vacia&quot;);
+                    }
+                }else {
+<span class="nc" id="L64">                    log.error(&quot;Tipo de transaccion no reconocida&quot;);</span>
+<span class="nc" id="L65">                    throw new ResponseStatusException(</span>
+                            HttpStatus.BAD_REQUEST,
+                            &quot;Tipo de transacción no reconocida&quot;);
+                }
+            }else {
+<span class="nc" id="L70">                log.error(&quot;ID transaccion externa duplicado&quot;);</span>
+<span class="nc" id="L71">                throw new ResponseStatusException(</span>
+                        HttpStatus.BAD_REQUEST,&quot;ID transaccion externa duplicado&quot;);
+            }
+<span class="nc" id="L74">        }catch (PersistenceException ex) {</span>
+            // Manejar errores de la base de datos, como problemas de conexión o constraints
+<span class="nc" id="L76">            log.error(&quot;Error al guardar transaccion en la base de datos. &quot;, ex);</span>
+<span class="nc" id="L77">            throw new CustomException(&quot;Error al guardar transaccion en la base de datos. &quot;, ex);</span>
+<span class="nc" id="L78">        } catch (Exception ex) {</span>
+            // Manejar cualquier otra excepción
+<span class="nc" id="L80">            log.error(&quot;Error inesperado al guardar la transaccion. &quot;, ex);</span>
+<span class="nc" id="L81">            throw new CustomException(&quot;Error inesperado al guardar la transaccion. &quot;, ex);</span>
+        }
+    }
+
+    public Optional&lt;Transaccion&gt; getTransaccionByTxnInId(String id) {
+<span class="fc" id="L86">        return transaccionRepository.findByTxnInId(id);</span>
+    }
+
+    public List&lt;Transaccion&gt; getAllTransacciones() {
+<span class="nc" id="L90">        return transaccionRepository.findAll();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

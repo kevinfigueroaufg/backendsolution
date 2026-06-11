@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Transaccion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">sv.unicomer.backendsolution.entity</a> &gt; <span class="el_source">Transaccion.java</span></div><h1>Transaccion.java</h1><pre class="source lang-java linenums">package sv.unicomer.backendsolution.entity;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.Date;
+
+@Entity
+@Getter
+<span class="pc" id="L11">@Setter</span>
+<span class="fc" id="L12">public class Transaccion {</span>
+
+    @Id
+    @SequenceGenerator(name = &quot;txn_id_seq&quot;, sequenceName = &quot;txn_id_seq&quot;, allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = &quot;txn_id_seq&quot;)
+<span class="nc" id="L17">    private Integer id;</span>
+
+<span class="nc" id="L19">    private String txnInId;</span>
+
+<span class="nc" id="L21">    private String txnTipo;</span>
+
+<span class="nc" id="L23">    private String txnEstado;</span>
+
+<span class="nc" id="L25">    private String txnSistema;</span>
+
+<span class="nc" id="L27">    private String txnDetalle;</span>
+
+<span class="nc" id="L29">    private Date txnDate;</span>
+
+<span class="nc" id="L31">    private Double txnTotal;</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

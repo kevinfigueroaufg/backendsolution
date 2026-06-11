@@ -1,0 +1,12 @@
+sv\unicomer\backendsolution\controller\TipoTransaccionController.class
+sv\unicomer\backendsolution\exceptions\CustomException.class
+sv\unicomer\backendsolution\controller\TransaccionController.class
+sv\unicomer\backendsolution\util\MessageConstants.class
+sv\unicomer\backendsolution\entity\Transaccion.class
+sv\unicomer\backendsolution\service\TipoTransaccionService.class
+sv\unicomer\backendsolution\service\TransaccionService.class
+sv\unicomer\backendsolution\entity\TipoTransaccion.class
+sv\unicomer\backendsolution\dto\TransaccionInDTO.class
+sv\unicomer\backendsolution\repository\TransaccionRepository.class
+sv\unicomer\backendsolution\BackendsolutionApplication.class
+sv\unicomer\backendsolution\repository\TipoTransaccionRepository.class

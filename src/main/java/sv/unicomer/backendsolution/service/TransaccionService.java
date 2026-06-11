@@ -2,7 +2,10 @@ package sv.unicomer.backendsolution.service;
 
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import sv.unicomer.backendsolution.dto.TransaccionInDTO;
 import sv.unicomer.backendsolution.entity.TipoTransaccion;
 import sv.unicomer.backendsolution.entity.Transaccion;
@@ -15,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class TransaccionService {
 
     private final TransaccionRepository transaccionRepository;
@@ -44,28 +48,36 @@ public class TransaccionService {
                             txn.setTxnDetalle(transaccionDTO.getTxnDetalle());
                             txn.setTxnDate(new Date());
                             txn.setTxnTotal(transaccionDTO.getTxnTotal());
+                            log.info("Objeto guardado, procesando guardado txn");
                             return transaccionRepository.save(txn);
                         }else {
-                            System.out.println("Descripcion de transaccion no puede ser vacia");
-                            return null;
+                            log.error("Descripcion de transaccion no puede ser vacia");
+                            throw new ResponseStatusException(
+                                    HttpStatus.BAD_REQUEST,"Descripcion de transaccion no puede ser vacia");
                         }
                     }else {
-                        System.out.println("Descripcion de transaccion no puede ser vacia");
-                        return null;
+                        log.error("Descripcion de transaccion no puede ser vacia");
+                        throw new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST,"Descripcion de transaccion no puede ser vacia");
                     }
                 }else {
-                    System.out.println("Tipo de transaccion no reconocida");
-                    return null;
+                    log.error("Tipo de transaccion no reconocida");
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Tipo de transacción no reconocida");
                 }
             }else {
-                System.out.println("ID transaccion externa duplicado");
-                return null;
+                log.error("ID transaccion externa duplicado");
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,"ID transaccion externa duplicado");
             }
         }catch (PersistenceException ex) {
             // Manejar errores de la base de datos, como problemas de conexión o constraints
+            log.error("Error al guardar transaccion en la base de datos. ", ex);
             throw new CustomException("Error al guardar transaccion en la base de datos. ", ex);
         } catch (Exception ex) {
             // Manejar cualquier otra excepción
+            log.error("Error inesperado al guardar la transaccion. ", ex);
             throw new CustomException("Error inesperado al guardar la transaccion. ", ex);
         }
     }

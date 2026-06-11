@@ -1,13 +1,17 @@
 package sv.unicomer.backendsolution.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sv.unicomer.backendsolution.dto.TransaccionInDTO;
-import sv.unicomer.backendsolution.entity.TipoTransaccion;
 import sv.unicomer.backendsolution.entity.Transaccion;
 import sv.unicomer.backendsolution.service.TransaccionService;
 
 import java.util.List;
+
+import static sv.unicomer.backendsolution.util.MessageConstants.*;
 
 @RestController
 @RequestMapping("/transacciones")
@@ -19,16 +23,33 @@ public class TransaccionController {
         this.transaccionService = transaccionService;
     }
 
+    @Operation(
+            summary = "Guardar transaccion",
+            description = "Guarda transaccion externa"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = OK, description = SAVE_OK),
+            @ApiResponse(responseCode = NOT_FOUND, description = REC_NOT_FOUND)
+    })
     @PostMapping("/saveTxn")
     public ResponseEntity<String> saveTxn(@RequestBody TransaccionInDTO txnIn) {
         Transaccion response = transaccionService.saveTxn(txnIn);
-        if (response != null) {
-            return ResponseEntity.ok("Transaccion "+response.getTxnTipo()+" guardada exitosamente. Idtxn Ext: " + response.getTxnInId()+" Idtxn Interno: "+response.getId()+" Estado: "+response.getTxnEstado());
-        }else{
-            return ResponseEntity.notFound().build();
-        }
+
+        return ResponseEntity.ok(
+                "Transaccion " + response.getTxnTipo() +
+                        " guardada exitosamente. Idtxn Ext: " + response.getTxnInId() +
+                        " Idtxn Interno: " + response.getId() +
+                        " Estado: " + response.getTxnEstado() );
     }
 
+    @Operation(
+            summary = "Lista de transacciones",
+            description = "Lista de transacciones almacenadas"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = NOT_FOUND, description = REC_NOT_FOUND),
+            @ApiResponse(responseCode = OK, description = LIST_OK)
+    })
     @GetMapping("/transacciones")
     public ResponseEntity<List<Transaccion>> getAllTransacciones() {
         return ResponseEntity.ok(transaccionService.getAllTransacciones());
