@@ -55,7 +55,9 @@ public class TransaccionService {
                             txn.setTxnDate(new Date());
                             txn.setTxnTotal(transaccionDTO.getTxnTotal());
                             log.info("Objeto guardado, procesando guardado txn");
-                            return transaccionRepository.save(txn);
+                            transaccionRepository.save(txn);
+                            log.info("Comenzando procesamiento de transaccion recibida...");
+                            return processTxn(txn.getTxnInId());
                         }else {
                             log.error("Descripcion de transaccion no puede ser vacia");
                             throw new ResponseStatusException(
@@ -107,6 +109,10 @@ public class TransaccionService {
                     getTransaccionByTxnInId(txnInId);
             if (txnIn.isPresent()) {
                 Transaccion transaccionBD = txnIn.get();
+                if (transaccionBD.getTxnEstado().equals(PROCESS_PROCESSED)) {
+                    log.info("Estado {} no valido para procesar transaccion {}, no se proceso transaccion",transaccionBD.getTxnEstado(), transaccionBD.getTxnInId());
+                    return null;
+                }
                 log.info("Transaccion encontrada, cambiando a estado {}",PROCESS_PROCESSING);
                 transaccionBD.setTxnEstado(PROCESS_PROCESSING);
                 transaccionRepository.saveAndFlush(transaccionBD);

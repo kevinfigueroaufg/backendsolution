@@ -36,11 +36,11 @@ public class TransaccionController {
     public ResponseEntity<String> saveTxn(@RequestBody TransaccionInDTO txnIn) {
         Transaccion response = transaccionService.saveTxn(txnIn);
 
-        return ResponseEntity.ok(
+        return response != null ? ResponseEntity.ok(
                 "Transaccion " + response.getTxnTipo() +
                         " guardada exitosamente. Idtxn Ext: " + response.getTxnInId() +
                         " Idtxn Interno: " + response.getId() +
-                        " Estado: " + response.getTxnEstado() );
+                        " Estado: " + response.getTxnEstado() ) : ResponseEntity.badRequest().body("Error al procesar transaccion");
     }
 
     @Operation(
@@ -56,6 +56,15 @@ public class TransaccionController {
         return ResponseEntity.ok(transaccionService.getAllTransacciones());
     }
 
+    @Operation(
+            summary = "Procesa las transacciones recibidas",
+            description = "Procesa las transacciones recibidas y reprocesa fallidas"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = NOT_FOUND, description = REC_NOT_FOUND),
+            @ApiResponse(responseCode = OK, description = LIST_OK),
+            @ApiResponse(responseCode = BAD_REQUEST, description = REC_BAD_REQUEST)
+    })
     @PostMapping("/processTxn/{txnInId}")
     public ResponseEntity<String> processTxn(@PathVariable String txnInId) {
         Transaccion response = transaccionService.processTxn(txnInId);
@@ -64,17 +73,35 @@ public class TransaccionController {
                             " procesada exitosamente. ") : ResponseEntity.badRequest().body("Error al procesar transaccion");
 
     }
+
+    @Operation(
+            summary = "Lista de transacciones procesadas (Historico)",
+            description = "Lista de transacciones procesadas (Historico)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = NOT_FOUND, description = REC_NOT_FOUND),
+            @ApiResponse(responseCode = OK, description = LIST_OK)
+    })
     @GetMapping("/transaccionesProcesadas")
     public ResponseEntity<List<TransaccionProcessingHistory>> getAllTransaccionesProcesadas() {
         return ResponseEntity.ok(transaccionService.getAllTransaccionesProcesadas());
     }
 
+    @Operation(
+            summary = "Emula estados de transaccion fallida",
+            description = "Emula estados de transaccion fallida en estado recibidio"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = NOT_FOUND, description = REC_NOT_FOUND),
+            @ApiResponse(responseCode = OK, description = LIST_OK),
+            @ApiResponse(responseCode = BAD_REQUEST, description = REC_BAD_REQUEST)
+    })
     @PostMapping("/processTxnFail/{txnInId}")
     public ResponseEntity<String> processTxnFail(@PathVariable String txnInId) {
         Transaccion response = transaccionService.processTxnFail(txnInId);
         return response != null ? ResponseEntity.ok(
                 "Transaccion " + response.getTxnInId() +
-                        " procesada exitosamente. ") : ResponseEntity.badRequest().body("Error al procesar transaccion");
+                        " procesada fallida. ") : ResponseEntity.badRequest().body("Error al procesar transaccion");
 
     }
 }

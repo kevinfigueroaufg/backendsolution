@@ -17,6 +17,7 @@ public final  class MessageConstants {
     public static final String SAVE_OK = "Guardado exitosamente";
     public static final String REC_NOT_FOUND = "No encontrado";
     public static final String REC_FOUND = "Encontrado";
+    public static final String REC_BAD_REQUEST = "Solicitud incorrecta o con error";
 
     //CONSULTA RESPUESTA
     public static final String LIST_OK = "Listado exitosamente";
