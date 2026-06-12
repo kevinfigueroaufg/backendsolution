@@ -11,7 +11,7 @@ BD H2
 Mozilla Firefox/Internet Explorer/Google Chrome
 
 #Cómo ejecutar el proyecto
-1. Descargue el archivo comprimido backend_unicomer desde el enlace WeTransfer link
+1. Descargue el archivo comprimido backend_unicomer desde el enlace Onedrive https://1drv.ms/u/c/8a3a9e7ac0dcaf3f/IQCSv3nhsEqhTIcIa8llqDfzAS8fF4CoPg8MKJ55MD0z1_Y?e=hhJQeC
 2. Descomprima el archivo descargado, dentro de la carpeta backend_unicomer ejecute el archivo iniciar_backend.bat espere que inicie el servidor y el proyecto
 
 NOTA: El codigo del proyecto esta en el repositorio github https://github.com/kevinfigueroaufg/backendsolution.git, descargue/clone y ejecute en la IDE de preferencia con RUN (IntellijIDEA)
