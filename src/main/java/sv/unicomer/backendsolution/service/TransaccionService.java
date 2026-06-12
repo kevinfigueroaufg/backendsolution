@@ -3,9 +3,14 @@ package sv.unicomer.backendsolution.service;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import sv.unicomer.backendsolution.dto.TransaccionDetailDTO;
+import sv.unicomer.backendsolution.dto.TransaccionFiltroDTO;
 import sv.unicomer.backendsolution.dto.TransaccionInDTO;
 import sv.unicomer.backendsolution.entity.TipoTransaccion;
 import sv.unicomer.backendsolution.entity.Transaccion;
@@ -215,5 +220,58 @@ public class TransaccionService {
             log.error("Error inesperado al guardar la transaccion. ", ex);
             throw new CustomException("Error inesperado al guardar la transaccion. ", ex);
         }
+    }
+
+    public Page<Transaccion> buscarTransacciones(
+            TransaccionFiltroDTO filtro) {
+
+        Pageable pageable = PageRequest.of(
+                filtro.getPage(),
+                filtro.getSize());
+
+        Date fechaInicio = null;
+        Date fechaFin = null;
+
+        if (filtro.getFechaInicio() != null) {
+            fechaInicio = java.sql.Date.valueOf(filtro.getFechaInicio());
+        }
+
+        if (filtro.getFechaFin() != null) {
+            fechaFin = java.sql.Timestamp.valueOf(
+                    filtro.getFechaFin().atTime(23, 59, 59)
+            );
+        }
+
+        return transaccionRepository.buscarTransacciones(
+                filtro.getEstado(),
+                filtro.getTipo(),
+                filtro.getSistemaOrigen(),
+                fechaInicio,
+                fechaFin,
+                pageable);
+    }
+
+    public Optional<TransaccionDetailDTO> getTransaccionDetailByTxnInId(String id) {
+        Optional<Transaccion> txnIn =
+                getTransaccionByTxnInId(id);
+        if (txnIn.isPresent()){
+            List<TransaccionProcessingHistory> txnInProcess =
+                    transaccionProcessingHistoryRepository.findListByTxnInId(id);
+            TransaccionDetailDTO detailDTO = new TransaccionDetailDTO();
+            detailDTO.setTxnInId(txnIn.get().getTxnInId());
+            detailDTO.setTxnTipo(txnIn.get().getTxnTipo());
+            detailDTO.setTxnEstado(txnIn.get().getTxnEstado());
+            detailDTO.setTxnDate(txnIn.get().getTxnDate());
+            detailDTO.setTxnDetalle(txnIn.get().getTxnDetalle());
+            detailDTO.setTxnSistema(txnIn.get().getTxnSistema());
+            detailDTO.setTxnTotal(txnIn.get().getTxnTotal());
+            if (!txnInProcess.isEmpty()){
+                detailDTO.setTxnProcessingHistory(txnInProcess);
+            }
+            return Optional.of(detailDTO);
+        }else {
+            return Optional.empty();
+        }
+
     }
 }

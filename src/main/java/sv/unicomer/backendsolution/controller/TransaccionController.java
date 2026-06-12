@@ -3,14 +3,18 @@ package sv.unicomer.backendsolution.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import sv.unicomer.backendsolution.dto.TransaccionDetailDTO;
+import sv.unicomer.backendsolution.dto.TransaccionFiltroDTO;
 import sv.unicomer.backendsolution.dto.TransaccionInDTO;
 import sv.unicomer.backendsolution.entity.Transaccion;
 import sv.unicomer.backendsolution.entity.TransaccionProcessingHistory;
 import sv.unicomer.backendsolution.service.TransaccionService;
 
 import java.util.List;
+import java.util.Optional;
 
 import static sv.unicomer.backendsolution.util.MessageConstants.*;
 
@@ -103,5 +107,37 @@ public class TransaccionController {
                 "Transaccion " + response.getTxnInId() +
                         " procesada fallida. ") : ResponseEntity.badRequest().body("Error al procesar transaccion");
 
+    }
+
+    @Operation(
+            summary = "Consulta lista transacciones con filtros",
+            description = "Consulta lista transacciones con filtros"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = NOT_FOUND, description = REC_NOT_FOUND),
+            @ApiResponse(responseCode = OK, description = LIST_OK)
+    })
+    @PostMapping("/buscarTxns")
+    public ResponseEntity<Page<Transaccion>> buscarTransacciones(
+            @RequestBody TransaccionFiltroDTO filtro) {
+
+        return ResponseEntity.ok(
+                transaccionService.buscarTransacciones(filtro));
+    }
+
+    @Operation(
+            summary = "Busca un transaccion en especifico y muestra detalle",
+            description = "Busca un transaccion en especifico y muestra detalle"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = NOT_FOUND, description = REC_NOT_FOUND),
+            @ApiResponse(responseCode = OK, description = LIST_OK),
+            @ApiResponse(responseCode = BAD_REQUEST, description = REC_BAD_REQUEST)
+    })
+
+    @PostMapping("/txnDetail/{txnInId}")
+    public ResponseEntity<Optional<TransaccionDetailDTO>> getTransaccionDetailByTxnInId(@PathVariable String txnInId) {
+        Optional<TransaccionDetailDTO> response = transaccionService.getTransaccionDetailByTxnInId(txnInId);
+        return response.isPresent() ? ResponseEntity.ok(response) : ResponseEntity.notFound().build();
     }
 }
