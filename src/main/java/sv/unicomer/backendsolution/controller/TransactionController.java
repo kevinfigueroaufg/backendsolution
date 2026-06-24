@@ -6,12 +6,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import sv.unicomer.backendsolution.dto.TransaccionDetailDTO;
-import sv.unicomer.backendsolution.dto.TransaccionFiltroDTO;
-import sv.unicomer.backendsolution.dto.TransaccionInDTO;
-import sv.unicomer.backendsolution.entity.Transaccion;
-import sv.unicomer.backendsolution.entity.TransaccionProcessingHistory;
-import sv.unicomer.backendsolution.service.TransaccionService;
+import sv.unicomer.backendsolution.dto.TransactionDetailDTO;
+import sv.unicomer.backendsolution.dto.TransactionFilterDTO;
+import sv.unicomer.backendsolution.dto.TransactionInDTO;
+import sv.unicomer.backendsolution.entity.Transaction;
+import sv.unicomer.backendsolution.entity.TransactionProcessingHistory;
+import sv.unicomer.backendsolution.service.TransactionService;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,12 +20,12 @@ import static sv.unicomer.backendsolution.util.MessageConstants.*;
 
 @RestController
 @RequestMapping("/transacciones")
-public class TransaccionController {
+public class TransactionController {
 
-    private final TransaccionService transaccionService;
+    private final TransactionService transactionService;
 
-    public TransaccionController(TransaccionService transaccionService) {
-        this.transaccionService = transaccionService;
+    public TransactionController(TransactionService transactionService) {
+        this.transactionService = transactionService;
     }
 
     @Operation(
@@ -37,14 +37,14 @@ public class TransaccionController {
             @ApiResponse(responseCode = NOT_FOUND, description = REC_NOT_FOUND)
     })
     @PostMapping("/saveTxn")
-    public ResponseEntity<String> saveTxn(@RequestBody TransaccionInDTO txnIn) {
-        Transaccion response = transaccionService.saveTxn(txnIn);
+    public ResponseEntity<String> saveTxn(@RequestBody TransactionInDTO txnIn) {
+        Transaction response = transactionService.saveTxn(txnIn);
 
         return response != null ? ResponseEntity.ok(
-                "Transaccion " + response.getTxnTipo() +
+                "Transaccion " + response.getTxnType() +
                         " guardada exitosamente. Idtxn Ext: " + response.getTxnInId() +
                         " Idtxn Interno: " + response.getId() +
-                        " Estado: " + response.getTxnEstado() ) : ResponseEntity.badRequest().body("Error al procesar transaccion");
+                        " Estado: " + response.getTxnStatus() ) : ResponseEntity.badRequest().body("Error al procesar transaccion");
     }
 
     @Operation(
@@ -56,8 +56,8 @@ public class TransaccionController {
             @ApiResponse(responseCode = OK, description = LIST_OK)
     })
     @GetMapping("/transacciones")
-    public ResponseEntity<List<Transaccion>> getAllTransacciones() {
-        return ResponseEntity.ok(transaccionService.getAllTransacciones());
+    public ResponseEntity<List<Transaction>> getAllTransactions() {
+        return ResponseEntity.ok(transactionService.getAllTransactions());
     }
 
     @Operation(
@@ -71,7 +71,7 @@ public class TransaccionController {
     })
     @PostMapping("/processTxn/{txnInId}")
     public ResponseEntity<String> processTxn(@PathVariable String txnInId) {
-        Transaccion response = transaccionService.processTxn(txnInId);
+        Transaction response = transactionService.processTxn(txnInId);
             return response != null ? ResponseEntity.ok(
                     "Transaccion " + response.getTxnInId() +
                             " procesada exitosamente. ") : ResponseEntity.badRequest().body("Error al procesar transaccion");
@@ -87,8 +87,8 @@ public class TransaccionController {
             @ApiResponse(responseCode = OK, description = LIST_OK)
     })
     @GetMapping("/transaccionesProcesadas")
-    public ResponseEntity<List<TransaccionProcessingHistory>> getAllTransaccionesProcesadas() {
-        return ResponseEntity.ok(transaccionService.getAllTransaccionesProcesadas());
+    public ResponseEntity<List<TransactionProcessingHistory>> getAllTransactionsProcessed() {
+        return ResponseEntity.ok(transactionService.getAllTransactionsProcessed());
     }
 
     @Operation(
@@ -102,7 +102,7 @@ public class TransaccionController {
     })
     @PostMapping("/processTxnFail/{txnInId}")
     public ResponseEntity<String> processTxnFail(@PathVariable String txnInId) {
-        Transaccion response = transaccionService.processTxnFail(txnInId);
+        Transaction response = transactionService.processTxnFail(txnInId);
         return response != null ? ResponseEntity.ok(
                 "Transaccion " + response.getTxnInId() +
                         " procesada fallida. ") : ResponseEntity.badRequest().body("Error al procesar transaccion");
@@ -118,11 +118,11 @@ public class TransaccionController {
             @ApiResponse(responseCode = OK, description = LIST_OK)
     })
     @PostMapping("/buscarTxns")
-    public ResponseEntity<Page<Transaccion>> buscarTransacciones(
-            @RequestBody TransaccionFiltroDTO filtro) {
+    public ResponseEntity<Page<Transaction>> searchTransactions(
+            @RequestBody TransactionFilterDTO filtro) {
 
         return ResponseEntity.ok(
-                transaccionService.buscarTransacciones(filtro));
+                transactionService.searchTransactions(filtro));
     }
 
     @Operation(
@@ -136,8 +136,8 @@ public class TransaccionController {
     })
 
     @PostMapping("/txnDetail/{txnInId}")
-    public ResponseEntity<Optional<TransaccionDetailDTO>> getTransaccionDetailByTxnInId(@PathVariable String txnInId) {
-        Optional<TransaccionDetailDTO> response = transaccionService.getTransaccionDetailByTxnInId(txnInId);
+    public ResponseEntity<Optional<TransactionDetailDTO>> getTransactionDetailByTxnInId(@PathVariable String txnInId) {
+        Optional<TransactionDetailDTO> response = transactionService.getTransactionDetailByTxnInId(txnInId);
         return response.isPresent() ? ResponseEntity.ok(response) : ResponseEntity.notFound().build();
     }
 }
