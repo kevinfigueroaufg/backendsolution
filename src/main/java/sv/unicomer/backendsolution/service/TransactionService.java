@@ -9,58 +9,59 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import sv.unicomer.backendsolution.dto.TransaccionDetailDTO;
-import sv.unicomer.backendsolution.dto.TransaccionFiltroDTO;
-import sv.unicomer.backendsolution.dto.TransaccionInDTO;
-import sv.unicomer.backendsolution.entity.TipoTransaccion;
-import sv.unicomer.backendsolution.entity.Transaccion;
-import sv.unicomer.backendsolution.entity.TransaccionProcessingHistory;
+import sv.unicomer.backendsolution.dto.TransactionDetailDTO;
+import sv.unicomer.backendsolution.dto.TransactionFilterDTO;
+import sv.unicomer.backendsolution.dto.TransactionInDTO;
+import sv.unicomer.backendsolution.entity.Transaction;
+import sv.unicomer.backendsolution.entity.TransactionProcessingHistory;
+import sv.unicomer.backendsolution.entity.TransactionType;
 import sv.unicomer.backendsolution.exceptions.CustomException;
-import sv.unicomer.backendsolution.repository.TransaccionProcessingHistoryRepository;
-import sv.unicomer.backendsolution.repository.TransaccionRepository;
+import sv.unicomer.backendsolution.repository.TransactionProcessingHistoryRepository;
+import sv.unicomer.backendsolution.repository.TransactionRepository;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static sv.unicomer.backendsolution.util.MessageConstants.*;
 
 @Service
 @Slf4j
-public class TransaccionService {
+public class TransactionService {
 
-    private final TransaccionRepository transaccionRepository;
-    private final TransaccionProcessingHistoryRepository transaccionProcessingHistoryRepository;
-    private final TipoTransaccionService tipoTransaccionService;
+    private final TransactionRepository transactionRepository;
+    private final TransactionProcessingHistoryRepository transactionProcessingHistoryRepository;
+    private final TransactionTypeService transactionTypeService;
 
-    public TransaccionService(TransaccionRepository transaccionRepository, TransaccionProcessingHistoryRepository transaccionProcessingHistoryRepository, TipoTransaccionService tipoTransaccionService) {
-        this.transaccionRepository = transaccionRepository;
-        this.transaccionProcessingHistoryRepository = transaccionProcessingHistoryRepository;
-        this.tipoTransaccionService = tipoTransaccionService;
+    public TransactionService(TransactionRepository transactionRepository, TransactionProcessingHistoryRepository transactionProcessingHistoryRepository, TransactionTypeService transactionTypeService) {
+        this.transactionRepository = transactionRepository;
+        this.transactionProcessingHistoryRepository = transactionProcessingHistoryRepository;
+        this.transactionTypeService = transactionTypeService;
     }
 
     @Transactional
-    public Transaccion saveTxn(TransaccionInDTO transaccionDTO) {
+    public Transaction saveTxn(TransactionInDTO transactionDTO) {
         try {
-            Optional<TipoTransaccion> tipo =
-                    tipoTransaccionService.getTipoTransaccionByNombre(transaccionDTO.getTxnTipo());
-            Optional<Transaccion> txnInId =
-                    getTransaccionByTxnInId(transaccionDTO.getTxnInId());
+            Optional<TransactionType> type =
+                    transactionTypeService.getTransactionTypeByName(transactionDTO.getTxnType());
+            Optional<Transaction> txnInId =
+                    getTransactionByTxnInId(transactionDTO.getTxnInId());
             if (txnInId.isEmpty()) {
-                if (tipo.isPresent()) {
-                    if (transaccionDTO.getTxnDetalle() != null) {
-                        if (!transaccionDTO.getTxnDetalle().equals("")) {
-                            Transaccion txn = new Transaccion();
-                            txn.setTxnInId(transaccionDTO.getTxnInId());
-                            txn.setTxnTipo(transaccionDTO.getTxnTipo());
-                            txn.setTxnEstado(PROCESS_RECEIVED);
-                            txn.setTxnSistema(transaccionDTO.getTxnSistema());
-                            txn.setTxnDetalle(transaccionDTO.getTxnDetalle());
+                if (type.isPresent()) {
+                    if (transactionDTO.getTxnDetail() != null) {
+                        if (!transactionDTO.getTxnDetail().equals("")) {
+                            Transaction txn = new Transaction();
+                            txn.setId(UUID.randomUUID().toString().replace("-", ""));
+                            txn.setTxnInId(transactionDTO.getTxnInId());
+                            txn.setTxnType(transactionDTO.getTxnType());
+                            txn.setTxnStatus(PROCESS_RECEIVED);
+                            txn.setTxnSystem(transactionDTO.getTxnSystem());
+                            txn.setTxnDetail(transactionDTO.getTxnDetail());
                             txn.setTxnDate(new Date());
-                            txn.setTxnTotal(transaccionDTO.getTxnTotal());
+                            txn.setTxnTotal(transactionDTO.getTxnTotal());
                             log.info("Objeto guardado, procesando guardado txn");
-                            transaccionRepository.save(txn);
+                            transactionRepository.save(txn);
                             log.info("Comenzando procesamiento de transaccion recibida...");
                             return processTxn(txn.getTxnInId());
                         }else {
@@ -95,86 +96,86 @@ public class TransaccionService {
         }
     }
 
-    public Optional<Transaccion> getTransaccionByTxnInId(String id) {
-        return transaccionRepository.findByTxnInId(id);
+    public Optional<Transaction> getTransactionByTxnInId(String id) {
+        return transactionRepository.findByTxnInId(id);
     }
 
-    public List<Transaccion> getAllTransacciones() {
-        return transaccionRepository.findAll();
+    public List<Transaction> getAllTransactions() {
+        return transactionRepository.findAll();
     }
 
-    public List<TransaccionProcessingHistory> getAllTransaccionesProcesadas() {
-        return transaccionProcessingHistoryRepository.findAll();
+    public List<TransactionProcessingHistory> getAllTransactionsProcessed() {
+        return transactionProcessingHistoryRepository.findAll();
     }
 
     @Transactional
-    public Transaccion processTxn(String txnInId) {
+    public Transaction processTxn(String txnInId) {
         try {
-            Optional<Transaccion> txnIn =
-                    getTransaccionByTxnInId(txnInId);
+            Optional<Transaction> txnIn =
+                    getTransactionByTxnInId(txnInId);
             if (txnIn.isPresent()) {
-                Transaccion transaccionBD = txnIn.get();
-                if (transaccionBD.getTxnEstado().equals(PROCESS_PROCESSED)) {
-                    log.info("Estado {} no valido para procesar transaccion {}, no se proceso transaccion",transaccionBD.getTxnEstado(), transaccionBD.getTxnInId());
+                Transaction transactionBD = txnIn.get();
+                if (transactionBD.getTxnStatus().equals(PROCESS_PROCESSED)) {
+                    log.info("Estado {} no valido para procesar transaccion {}, no se proceso transaccion",transactionBD.getTxnStatus(), transactionBD.getTxnInId());
                     return null;
                 }
                 log.info("Transaccion encontrada, cambiando a estado {}",PROCESS_PROCESSING);
-                transaccionBD.setTxnEstado(PROCESS_PROCESSING);
-                transaccionRepository.saveAndFlush(transaccionBD);
+                transactionBD.setTxnStatus(PROCESS_PROCESSING);
+                transactionRepository.saveAndFlush(transactionBD);
                 log.info("Estado actualizado");
                 try{
-                    TransaccionProcessingHistory txnProcess=new TransaccionProcessingHistory();
+                    TransactionProcessingHistory txnProcess=new TransactionProcessingHistory();
                     log.info("Registrando historico procesamiento");
                     txnProcess.setTxnInId(txnInId);
-                    txnProcess.setTxnProcessEstado(PROCESS_PROCESSED);
-                    txnProcess.setTxnProcessDetalle("Procesado");
+                    txnProcess.setTxnProcessStatus(PROCESS_PROCESSED);
+                    txnProcess.setTxnProcessDetail("Procesado");
                     txnProcess.setTxnProcessDate(new Date());
-                    transaccionProcessingHistoryRepository.save(txnProcess);
+                    transactionProcessingHistoryRepository.save(txnProcess);
                     log.info("Registrando historico guardado");
                     log.info("Cambiando a estado {} txn {}",PROCESS_PROCESSED, txnInId);
-                    Optional<Transaccion> txnInxUpdate =
-                            getTransaccionByTxnInId(txnInId);
-                    Transaccion transaccionBDxUpdate = txnInxUpdate.get();
-                    transaccionBDxUpdate.setTxnEstado(PROCESS_PROCESSED);
+                    Optional<Transaction> txnInxUpdate =
+                            getTransactionByTxnInId(txnInId);
+                    Transaction transaccionBDxUpdate = txnInxUpdate.get();
+                    transaccionBDxUpdate.setTxnStatus(PROCESS_PROCESSED);
                     log.info("Estado actualizado, transaccion {}, estado {}",txnInId,PROCESS_PROCESSED);
-                    return transaccionRepository.saveAndFlush(transaccionBDxUpdate);
+                    return transactionRepository.saveAndFlush(transaccionBDxUpdate);
                 }catch (PersistenceException ex) {
                     // Manejar errores de la base de datos, como problemas de conexión o constraints
                     log.error("Error al guardar transaccion en la base de datos. ", ex);
-                    TransaccionProcessingHistory txnProcessFail=new TransaccionProcessingHistory();
+                    TransactionProcessingHistory txnProcessFail=new TransactionProcessingHistory();
                     log.info("Registrando historico procesamiento fallido");
                     txnProcessFail.setTxnInId(txnInId);
-                    txnProcessFail.setTxnProcessEstado(PROCESS_RETRY_PENDING);
-                    txnProcessFail.setTxnProcessDetalle("PersistenceException - Error BD");
+                    txnProcessFail.setTxnProcessStatus(PROCESS_RETRY_PENDING);
+                    txnProcessFail.setTxnProcessDetail("PersistenceException - Error BD");
                     txnProcessFail.setTxnProcessDate(new Date());
-                    transaccionProcessingHistoryRepository.save(txnProcessFail);
+                    transactionProcessingHistoryRepository.save(txnProcessFail);
                     log.info("Registrando historico guardado");
                     log.info("Cambiando a estado {} txn {}",PROCESS_FAILED, txnInId);
-                    Optional<Transaccion> txnInxFailed =
-                            getTransaccionByTxnInId(txnInId);
-                    Transaccion transaccionBDxFailed = txnInxFailed.get();
-                    transaccionBDxFailed.setTxnEstado(PROCESS_FAILED);
+                    Optional<Transaction> txnInxFailed =
+                            getTransactionByTxnInId(txnInId);
+                    Transaction transactionBDxFailed = txnInxFailed.get();
+                    transactionBDxFailed.setTxnStatus(PROCESS_FAILED);
                     log.info("Estado actualizado, transaccion {}, estado {}",txnInId,PROCESS_FAILED);
-                    transaccionRepository.saveAndFlush(transaccionBDxFailed);
+                    transactionRepository.saveAndFlush(transactionBDxFailed);
                     return null;
                 } catch (Exception ex) {
                     // Manejar cualquier otra excepción
                     log.error("Error inesperado al guardar la transaccion. ", ex);
-                    TransaccionProcessingHistory txnProcessFail=new TransaccionProcessingHistory();
+                    TransactionProcessingHistory txnProcessFail=new TransactionProcessingHistory();
                     log.info("Registrando historico procesamiento fallido");
                     txnProcessFail.setTxnInId(txnInId);
-                    txnProcessFail.setTxnProcessEstado(PROCESS_RETRY_PENDING);
-                    txnProcessFail.setTxnProcessDetalle("PersistenceException - Error BD");
+                    txnProcessFail.setTxnProcessStatus(PROCESS_RETRY_PENDING);
+                    txnProcessFail.setTxnProcessDetail("PersistenceException - Error BD");
                     txnProcessFail.setTxnProcessDate(new Date());
-                    transaccionProcessingHistoryRepository.save(txnProcessFail);
+                    transactionProcessingHistoryRepository.save(txnProcessFail);
                     log.info("Registrando historico guardado");
                     log.info("Cambiando a estado {} txn {}",PROCESS_FAILED, txnInId);
-                    Optional<Transaccion> txnInxFailed =
-                            getTransaccionByTxnInId(txnInId);
-                    Transaccion transaccionBDxFailed = txnInxFailed.get();
-                    transaccionBDxFailed.setTxnEstado(PROCESS_FAILED);
+                    Optional<Transaction> txnInxFailed =
+                            getTransactionByTxnInId(txnInId);
+                    Transaction transaccionBDxFailed = txnInxFailed.get();
+                    transaccionBDxFailed.setTxnStatus(PROCESS_FAILED);
                     log.info("Estado actualizado, transaccion {}, estado {}",txnInId,PROCESS_FAILED);
-                    transaccionRepository.saveAndFlush(transaccionBDxFailed);
+                    transactionRepository.saveAndFlush(transaccionBDxFailed);
                     return null;
                 }
             }else {
@@ -194,23 +195,23 @@ public class TransaccionService {
     }
 
     @Transactional
-    public Transaccion processTxnFail(String txnInId) {
+    public Transaction processTxnFail(String txnInId) {
         try {
-            TransaccionProcessingHistory txnProcessFail=new TransaccionProcessingHistory();
+            TransactionProcessingHistory txnProcessFail=new TransactionProcessingHistory();
             log.info("Registrando historico procesamiento fallido");
             txnProcessFail.setTxnInId(txnInId);
-            txnProcessFail.setTxnProcessEstado(PROCESS_RETRY_PENDING);
-            txnProcessFail.setTxnProcessDetalle("PersistenceException - Error BD");
+            txnProcessFail.setTxnProcessStatus(PROCESS_RETRY_PENDING);
+            txnProcessFail.setTxnProcessDetail("PersistenceException - Error BD");
             txnProcessFail.setTxnProcessDate(new Date());
-            transaccionProcessingHistoryRepository.save(txnProcessFail);
+            transactionProcessingHistoryRepository.save(txnProcessFail);
             log.info("Registrando historico guardado");
             log.info("Cambiando a estado {} txn {}",PROCESS_FAILED, txnInId);
-            Optional<Transaccion> txnInxFailed =
-                    getTransaccionByTxnInId(txnInId);
-            Transaccion transaccionBDxFailed = txnInxFailed.get();
-            transaccionBDxFailed.setTxnEstado(PROCESS_FAILED);
+            Optional<Transaction> txnInxFailed =
+                    getTransactionByTxnInId(txnInId);
+            Transaction transactionBDxFailed = txnInxFailed.get();
+            transactionBDxFailed.setTxnStatus(PROCESS_FAILED);
             log.info("Estado actualizado, transaccion {}, estado {}",txnInId,PROCESS_FAILED);
-            return transaccionRepository.saveAndFlush(transaccionBDxFailed);
+            return transactionRepository.saveAndFlush(transactionBDxFailed);
         }catch (PersistenceException ex) {
             // Manejar errores de la base de datos, como problemas de conexión o constraints
             log.error("Error al guardar transaccion en la base de datos. ", ex);
@@ -222,8 +223,8 @@ public class TransaccionService {
         }
     }
 
-    public Page<Transaccion> buscarTransacciones(
-            TransaccionFiltroDTO filtro) {
+    public Page<Transaction> searchTransactions(
+            TransactionFilterDTO filtro) {
 
         Pageable pageable = PageRequest.of(
                 filtro.getPage(),
@@ -232,38 +233,38 @@ public class TransaccionService {
         Date fechaInicio = null;
         Date fechaFin = null;
 
-        if (filtro.getFechaInicio() != null) {
-            fechaInicio = java.sql.Date.valueOf(filtro.getFechaInicio());
+        if (filtro.getStartDate() != null) {
+            fechaInicio = java.sql.Date.valueOf(filtro.getStartDate());
         }
 
-        if (filtro.getFechaFin() != null) {
+        if (filtro.getEndDate() != null) {
             fechaFin = java.sql.Timestamp.valueOf(
-                    filtro.getFechaFin().atTime(23, 59, 59)
+                    filtro.getEndDate().atTime(23, 59, 59)
             );
         }
 
-        return transaccionRepository.buscarTransacciones(
-                filtro.getEstado(),
-                filtro.getTipo(),
-                filtro.getSistemaOrigen(),
+        return transactionRepository.searchTransactions(
+                filtro.getStatus(),
+                filtro.getType(),
+                filtro.getOriginSystem(),
                 fechaInicio,
                 fechaFin,
                 pageable);
     }
 
-    public Optional<TransaccionDetailDTO> getTransaccionDetailByTxnInId(String id) {
-        Optional<Transaccion> txnIn =
-                getTransaccionByTxnInId(id);
+    public Optional<TransactionDetailDTO> getTransactionDetailByTxnInId(String id) {
+        Optional<Transaction> txnIn =
+                getTransactionByTxnInId(id);
         if (txnIn.isPresent()){
-            List<TransaccionProcessingHistory> txnInProcess =
-                    transaccionProcessingHistoryRepository.findListByTxnInId(id);
-            TransaccionDetailDTO detailDTO = new TransaccionDetailDTO();
+            List<TransactionProcessingHistory> txnInProcess =
+                    transactionProcessingHistoryRepository.findListByTxnInId(id);
+            TransactionDetailDTO detailDTO = new TransactionDetailDTO();
             detailDTO.setTxnInId(txnIn.get().getTxnInId());
-            detailDTO.setTxnTipo(txnIn.get().getTxnTipo());
-            detailDTO.setTxnEstado(txnIn.get().getTxnEstado());
+            detailDTO.setTxnType(txnIn.get().getTxnType());
+            detailDTO.setTxnStatus(txnIn.get().getTxnStatus());
             detailDTO.setTxnDate(txnIn.get().getTxnDate());
-            detailDTO.setTxnDetalle(txnIn.get().getTxnDetalle());
-            detailDTO.setTxnSistema(txnIn.get().getTxnSistema());
+            detailDTO.setTxnDetail(txnIn.get().getTxnDetail());
+            detailDTO.setTxnSystem(txnIn.get().getTxnSystem());
             detailDTO.setTxnTotal(txnIn.get().getTxnTotal());
             if (!txnInProcess.isEmpty()){
                 detailDTO.setTxnProcessingHistory(txnInProcess);

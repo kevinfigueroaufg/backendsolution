@@ -9,7 +9,7 @@ import java.util.Date;
 @Entity
 @Getter
 @Setter
-public class TransaccionProcessingHistory {
+public class TransactionProcessingHistory {
     @Id
     @SequenceGenerator(name = "txnProcess_id_seq", sequenceName = "txnProcess_id_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "txnProcess_id_seq")
@@ -17,9 +17,9 @@ public class TransaccionProcessingHistory {
 
     private String txnInId;
 
-    private String txnProcessEstado;
+    private String txnProcessStatus;
 
-    private String txnProcessDetalle;
+    private String txnProcessDetail;
 
     private Date txnProcessDate;
 }

@@ -7,15 +7,15 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TransaccionInDTO {
+public class TransactionInDTO {
 
     private String txnInId;
 
-    private String txnTipo;
+    private String txnType;
 
-    private String txnSistema;
+    private String txnSystem;
 
-    private String txnDetalle;
+    private String txnDetail;
 
     private Double txnTotal;
 }

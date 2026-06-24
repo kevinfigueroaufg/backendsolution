@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import sv.unicomer.backendsolution.entity.TipoTransaccion;
-import sv.unicomer.backendsolution.service.TipoTransaccionService;
+import sv.unicomer.backendsolution.entity.TransactionType;
+import sv.unicomer.backendsolution.service.TransactionTypeService;
 
 import java.util.List;
 
@@ -18,12 +18,12 @@ import static sv.unicomer.backendsolution.util.MessageConstants.LIST_OK;
 
 @RestController
 @RequestMapping("/catalogos")
-public class TipoTransaccionController {
+public class TransactionTypeController {
 
-    private final TipoTransaccionService tipoTransaccionService;
+    private final TransactionTypeService transactionTypeService;
 
-    public TipoTransaccionController(TipoTransaccionService tipoTransaccionService) {
-        this.tipoTransaccionService = tipoTransaccionService;
+    public TransactionTypeController(TransactionTypeService transactionTypeService) {
+        this.transactionTypeService = transactionTypeService;
     }
     @Operation(
             summary = "Lista de tipos de transacciones permitidas",
@@ -34,8 +34,8 @@ public class TipoTransaccionController {
             @ApiResponse(responseCode = OK, description = LIST_OK)
     })
     @GetMapping("/tipotransacciones")
-    public ResponseEntity<List<TipoTransaccion>> getAllTipotransacciones() {
-        return ResponseEntity.ok(tipoTransaccionService.getAllTipotransacciones());
+    public ResponseEntity<List<TransactionType>> getAllTransactionTypes() {
+        return ResponseEntity.ok(transactionTypeService.getAllTransactionTypes());
     }
 
     @Operation(
@@ -47,8 +47,8 @@ public class TipoTransaccionController {
             @ApiResponse(responseCode = OK, description = REC_FOUND)
     })
     @GetMapping("/tipotransacciones/{nombre}")
-    public ResponseEntity<TipoTransaccion> getOrdersByID(@PathVariable String nombre) {
-        return tipoTransaccionService.getTipoTransaccionByNombre(nombre)
+    public ResponseEntity<TransactionType> getOrdersByID(@PathVariable String name) {
+        return transactionTypeService.getTransactionTypeByName(name)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
